@@ -46,12 +46,12 @@ fn main() {
         println!("cargo:rustc-link-lib=dylib=c++");
     }
 
-    println!("cargo:rustc-link-lib=static=Luau.Ast");
-    println!("cargo:rustc-link-lib=static=Luau.Config");
-    println!("cargo:rustc-link-lib=static=Luau.Compiler");
-    println!("cargo:rustc-link-lib=static=Luau.VM");
-    println!("cargo:rustc-link-lib=static=Luau.RequireNavigator");
-    println!("cargo:rustc-link-lib=static=Luau.Require");
+    println!("cargo:rustc-link-lib=static:+whole-archive=Luau.Ast");
+    println!("cargo:rustc-link-lib=static:+whole-archive=Luau.Config");
+    println!("cargo:rustc-link-lib=static:+whole-archive=Luau.Compiler");
+    println!("cargo:rustc-link-lib=static:+whole-archive=Luau.VM");
+    println!("cargo:rustc-link-lib=static:+whole-archive=Luau.RequireNavigator");
+    println!("cargo:rustc-link-lib=static:+whole-archive=Luau.Require");
 
     bindgen::Builder::default()
         .headers([

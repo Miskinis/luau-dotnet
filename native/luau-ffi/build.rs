@@ -33,17 +33,13 @@ fn main() {
     );
 
     let target = build_target::target_triple().unwrap();
-    if target == "aarch64-unknown-linux-gnu" {
-        println!("cargo:rustc-link-search=native={}/build", dst.display());
-        println!("cargo:rustc-link-lib=dylib=stdc++");
-    } else if target == "x86_64-pc-windows-msvc" {
+    if target == "x86_64-pc-windows-msvc" {
         println!(
             "cargo:rustc-link-search=native={}/build/Release",
             dst.display()
         );
     } else {
         println!("cargo:rustc-link-search=native={}/build", dst.display());
-        println!("cargo:rustc-link-lib=dylib=c++");
     }
 
     println!("cargo:rustc-link-lib=static:+whole-archive=Luau.Ast");
@@ -52,6 +48,18 @@ fn main() {
     println!("cargo:rustc-link-lib=static:+whole-archive=Luau.VM");
     println!("cargo:rustc-link-lib=static:+whole-archive=Luau.RequireNavigator");
     println!("cargo:rustc-link-lib=static:+whole-archive=Luau.Require");
+
+    // The C++ runtime must be linked AFTER the static Luau archives. With GNU ld's
+    // default --as-needed, a -l placed before the archives is dropped because no
+    // C++ symbols are undefined yet; the resulting .so then has unresolved
+    // __cxa_*/std:: symbols and no DT_NEEDED entry, so dlopen fails at runtime.
+    // Linux always uses libstdc++ here (the Luau C++ is compiled by cc/gcc, not
+    // libc++), and it is present on every desktop Linux/Steam Deck.
+    if target.ends_with("linux-gnu") {
+        println!("cargo:rustc-link-lib=dylib=stdc++");
+    } else if target != "x86_64-pc-windows-msvc" {
+        println!("cargo:rustc-link-lib=dylib=c++");
+    }
 
     bindgen::Builder::default()
         .headers([
